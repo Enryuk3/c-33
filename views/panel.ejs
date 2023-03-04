@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de administración</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"/>
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
+</head>
+<body>
+    <section class="main__container">
+        <%- include('./partials/header', { user: user.data, active: 'panel' }) %>
+
+        <% if (user.data.admin == 1) { %>
+            <article class="panel__container">
+                <div class="panel__container--leftside">
+                    <p>Panel de administrador</p>
+                    <ul>
+                        <li class="<%= tab === 'products' ? 'selected' : '' %>" onclick="location.href='/users/panel?tab=products'">Productos</li>
+                        <li class="<%= tab === 'carts' ? 'selected' : '' %>" onclick="location.href='/users/panel?tab=carts'">Carritos</li>
+                        <li class="<%= tab === 'orders' ? 'selected' : '' %>" onclick="location.href='/users/panel?tab=orders'">Ordenes</li>
+                        <li class="<%= tab === 'users' ? 'selected' : '' %>" onclick="location.href='/users/panel?tab=users'">Usuarios</li>
+                    </ul>
+                </div>
+                <div class="panel__container--rightside">
+                    <% if (tab == 'products') { %>
+                        <div class="panel__data--leftside">
+                            <div class="users__container" id="usersContainer">
+                                <% data.data.forEach(item=> { %>
+                                    <div class="user" onclick="productClickHandler('<%= item.id %>')" id="<%= item.id %>">
+                                        <div class="user__photo" style="background-image: url('<%= item.photo %>')"></div>
+                                        <p><%= item.name %></p>
+                                        <p>$ <%= item.price %></p>
+                                    </div>
+                                <% }) %>
+                            </div>
+                        </div>
+                        <div class="panel__data--rightside">
+                            <form>
+                                <label for='username'>Información del producto</label>
+                                <input type="text" name="productID" id="productID" placeholder="ID de producto" class="form__input" required autocomplete="off" disabled />
+                                <input type="text" name="productName" id="productName" placeholder="Nombre del producto" class="form__input" required autocomplete="off" />
+                                <input type="text" name="productPrice" id="productPrice" placeholder="Precio del producto" class="form__input" required autocomplete="off" />
+                                <input type="text" name="productPhoto" id="productPhoto" placeholder="URL de foto" class="form__input" required autocomplete="off" />
+                                <input type="text" name="productCategory" id="productCategory" placeholder="Categoría del producto" class="form__input" required autocomplete="off" />
+                                <button class="custom__button--dark" onclick="productCleanHandler(event)" style="align-self: flex-end;">Limpiar campos</button>
+                            </form>
+
+                            <div class="panel__buttons">
+                                <button class="custom__button--red"  onclick="deleteProductHandler()">Eliminar producto</button>
+                                <button class="custom__button--green" type="submit" form="loginForm" onclick="updateProductHandler()" id="productHandlerButton">Agregar producto</button>
+                            </div>
+                        </div>
+                    <% } %>
+
+                    <% if (tab == 'carts') { %>
+                        <div class="panel__data--leftside">
+                            <div class="users__container">
+                                <% data.data.forEach(item=> { %>
+                                    <div class="user" onclick="cartClickHandler('<%= item.cartID %>', '<%= item.products.length %>', '<%= item.total %>')" id="<%= item.cartID %>">
+                                        <div class="cart__photo" style="background-image: url('https://cdn-icons-png.flaticon.com/512/107/107831.png')"></div>
+                                        <p>ID: <%= item.cartID %></p>
+                                        <p># Productos: <%= item.products.length %></p>
+                                        <p>Total: $ <%= item.total %></p>
+                                    </div>
+                                <% }) %>
+                            </div>
+                        </div>
+                        <div class="panel__data--rightside">
+                            <form>
+                                <label for='productID'>ID del carrito</label>
+                                <input type="text" name="cartID" id="cartID" class="form__input" required autocomplete="off" disabled />
+                                <label for='cartProducts'>Cantidad de productos</label>
+                                <input type="text" name="cartProducts" id="cartProducts" class="form__input" required autocomplete="off" disabled />
+                                <label for='cartTotal'>Total</label>
+                                <input type="text" name="cartTotal" id="cartTotal" class="form__input" required autocomplete="off" disabled />
+                                <button class="custom__button--dark" onclick="clearCartHandler(event)" style="align-self: flex-end;">Vaciar carrito</button>
+                            </form>
+                        </div>
+                    <% } %>
+
+                    <% if (tab == 'orders') { %>
+                        <div class="panel__data--leftside">
+                            <div class="users__container">
+                                <% data.data.forEach(item=> { %>
+                                    <div class="user" onclick="orderClickHandler('<%= item.id %>', '<%= item.timestamp %>', '<%= item.products.length %>', '<%= item.orderEmail %>', '<%= item.status %>')" id="<%= item.id %>">
+                                        <div class="cart__photo" style="background-image: url('https://cdn-icons-png.flaticon.com/512/3496/3496156.png')"></div>
+                                        <p> <%= item.timestamp %></p>
+                                        <p>ID: <%= item.orderID %></p>
+                                        <p># Productos: <%= item.products.length %></p>
+                                        <p><%= item.status === 'undelivered' ? 'Sin enviar' : 'Enviado' %></p>
+                                    </div>
+                                <% }) %>
+                            </div>
+                        </div>
+
+                        <div class="panel__data--rightside">
+                            <form>
+                                <label for="orderID">ID de la orden</label>
+                                <input type="text" name="orderID" id="orderID" class="form__input" required autocomplete="off" disabled />
+                                <label for="orderDate">Fecha y hora de orden</label>
+                                <input type="text" name="orderDate" id="orderDate" class="form__input" required autocomplete="off" disabled />
+                                <label for="orderProducts">Cantidad de productos</label>
+                                <input type="text" name="orderProducts" id="orderProducts" class="form__input" required autocomplete="off" disabled />
+                                <label for="orderEmail">Email de orden</label>
+                                <input type="text" name="orderEmail" id="orderEmail" class="form__input" required autocomplete="off" disabled />
+                                <label for="orderStatus">Estado de la orden</label>
+                                <input type="text" name="orderStatus" id="orderStatus" class="form__input" required autocomplete="off" disabled />
+                            </form>
+
+                            <div class="panel__buttons">
+                                <button class="custom__button--dark"  onclick="deliveredOrderHandler(false)">Marcar como sin envíar</button>
+                                <button class="custom__button--green" type="submit" form="loginForm" onclick="deliveredOrderHandler(true)" id="productHandlerButton">Marcar como envíado</button>
+                            </div>
+                        </div>
+                    <% } %>
+
+                    <% if (tab == 'users') { %>
+                        <div class="panel__data--leftside">
+                            <div class="users__container">
+                                <% data.data.forEach(item=> { %>
+                                    <div class="user" onclick="userClickHandler('<%= item.username %>')" id="user__<%= item.username %>">
+                                        <div class="user__photo" style="background-image: url('/images/<%= item.avatar %>')"></div>
+                                        <p><%= item.username %></p>
+                                        <p><%= item.name %></p>
+                                        <p><%= item.cartID %></p>
+                                    </div>
+                                <% }) %>
+                            </div>
+                        </div>
+
+                        <div class="panel__data--rightside">
+                            <form>
+                                <label for='usernameInput'>Información de sesión</label>
+                                <input type="text" name="usernameInput" id="usernameInput" placeholder="Usuario" class="form__input" required autocomplete="off" disabled/>
+                                <input type="text" name="cart" id="cart" placeholder="ID de carrito" class="form__input" required autocomplete="off" disabled/>
+                                <input type="email" name="email" id="email" placeholder="Email" class="form__input" required autocomplete="off" />
+                                <label for="name">Información de perfil</label>
+                                <input type="text" name="name" id="name" placeholder="Nombre y apellido" class="form__input" required autocomplete="off" />
+                                <input type="text" name="address" id="address" placeholder="Dirección" class="form__input" required autocomplete="off" />
+                                <input type="text" name="age" id="age" placeholder="Edad" class="form__input" required autocomplete="off" />
+
+                                <div class="phoneForm">
+                                    <input type="text" name="areacode" id="areacode" placeholder="Area" class="form__input" required autocomplete="off" />
+                                    <input type="text" name="telephone" id="telephone" placeholder="Número de teléfono" class="form__input" required autocomplete="off" />
+                                </div>
+
+                                <div class="adminCheckbox">
+                                    <input type="checkbox" name="checkbox" id="checkbox" class="form__input" />
+                                    <label for="checkbox">Administrador</label>
+                                </div>
+
+                                <label for="avatar">Cambiar foto de perfil</label>
+                                <input type="file" name="avatar" id="avatar" />
+                            </form>
+
+                            <div class="panel__buttons">
+                                <button class="custom__button--red" onclick="removeUserHandler()">Eliminar usuario</button>
+                                <button class="custom__button--green" form="loginForm" onclick="updateUserHandler()">Actualizar usuario</button>
+                            </div>
+                        </div>
+                    <% } %>
+                </div>
+            </article>
+        <% } %>
+
+        <%- include('./partials/footer') %>
+    </section>
+</body>
+
+<script>
+    async function productClickHandler(productID) {
+        const getActives = document.getElementsByClassName('user__selected')
+        getActives.length > 0 && getActives[0].classList.remove('user__selected')
+        document.getElementById(`${productID}`).classList.add('user__selected')
+
+        const data = await fetch(`/products/${productID}`).then(response => response.json())
+
+        document.getElementById('productID').value = data.data.id
+        document.getElementById('productName').value = data.data.name
+        document.getElementById('productPrice').value = data.data.price
+        document.getElementById('productPhoto').value = data.data.photo
+        document.getElementById('productCategory').value = data.data.category
+        document.getElementById('productHandlerButton').innerText = 'Actualizar producto'
+    }
+
+    async function updateProductHandler() {
+        const productID = document.getElementById('productID').value
+
+        let newData = {}
+        newData.name = document.getElementById('productName').value
+        newData.price = document.getElementById('productPrice').value
+        newData.photo = document.getElementById('productPhoto').value
+        newData.category = document.getElementById('productCategory').value
+
+        if (productID !== '') {
+            const data = await fetch(`/products/${productID}`,
+                {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newData)
+                })
+                .then(response => response.json())
+
+            data.message === 'Query successfully resolved' && window.location.reload()
+            alertify.success('Producto actualizado de forma exitosa')
+        } else {
+            const data = await fetch(`/products`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newData)
+                })
+                .then(response => response.json())
+
+                data.message === 'Query successfully resolved' && window.location.reload()
+                alertify.success('Producto agregado de forma exitosa')
+        }
+    }
+
+    async function deleteProductHandler() {
+      const productID = document.getElementById('productID').value
+
+      if (productID !== '') {
+        const data = await fetch(`/products/${productID}`, { method: 'DELETE' })
+        .then(response => response.json())
+        data.message === 'Query successfully resolved' && window.location.reload()
+        alertify.success('Producto eliminado de forma exitosa')
+      }
+    }
+
+    function productCleanHandler(event) {
+      event.preventDefault()
+      document.getElementById('productID').value = ''
+      document.getElementById('productName').value = ''
+      document.getElementById('productPrice').value = ''
+      document.getElementById('productPhoto').value = ''
+      document.getElementById('productCategory').value = ''
+      document.getElementById('productHandlerButton').innerText = 'Agregar producto'
+      const getActives = document.getElementsByClassName('user__selected')
+      getActives.length > 0 && getActives[0].classList.remove('user__selected')
+    }
+
+    function cartClickHandler(cartID, cartProducts, cartTotal) {
+      const getActives = document.getElementsByClassName('user__selected')
+      getActives.length > 0 && getActives[0].classList.remove('user__selected')
+      document.getElementById(`${cartID}`).classList.add('user__selected')
+
+      document.getElementById('cartID').value = `${cartID}`
+      document.getElementById('cartProducts').value = `${cartProducts}`
+      document.getElementById('cartTotal').value = `$ ${cartTotal}`
+    }
+
+    async function clearCartHandler(event) {
+      event.preventDefault()
+      const cartID = document.getElementById('cartID').value
+
+      if (cartID !== '') {
+        const data = await fetch(`/carts/${cartID}`, { method: 'DELETE' })
+        .then(response => response.json())
+        data.message === 'Query successfully resolved' && window.location.reload()
+        alertify.success('Carrito vaciado de forma exitosa')
+      }
+    }
+
+    function orderClickHandler(orderID, orderDate, orderProducts, orderEmail, orderStatus) {
+        const getActives = document.getElementsByClassName('user__selected')
+        getActives.length > 0 && getActives[0].classList.remove('user__selected')
+        document.getElementById(`${orderID}`).classList.add('user__selected')
+
+        document.getElementById('orderID').value = orderID
+        document.getElementById('orderDate').value = orderDate
+        document.getElementById('orderProducts').value = orderProducts
+        document.getElementById('orderEmail').value = orderEmail
+        document.getElementById('orderStatus').value = orderStatus === 'undelivered' ? 'Sin enviar' : 'Enviado'
+    }
+
+    async function deliveredOrderHandler(status) {
+      const orderID = document.getElementById('orderID')
+      console.log(status);
+      if (orderID.value !== '') {
+        const data = await fetch(`/orders/${orderID.value}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: status === true ? 'delivered' : 'undelivered' })
+        })
+        .then(response => response.json())
+
+        if (data.message === 'Query successfully resolved') {
+          alertify.success('Orden modificada de forma exitosa')
+          setTimeout(() => window.location.reload(), 1000);
+        }
+      }
+    }
+
+    async function userClickHandler(username) {
+      const getActives = document.getElementsByClassName('user__selected')
+      getActives.length > 0 && getActives[0].classList.remove('user__selected')
+      document.getElementById(`user__${username}`).classList.add('user__selected')
+
+      const data = await fetch(`/users/${username}`).then(response => response.json())
+
+      document.getElementById('usernameInput').value = username
+      document.getElementById('email').value = data.email
+      document.getElementById('cart').value = data.cartID
+      document.getElementById('name').value = data.name
+      document.getElementById('address').value = data.address
+      document.getElementById('age').value = data.age
+      document.getElementById('areacode').value = data.areacode
+      document.getElementById('telephone').value = data.telephone
+      document.getElementById('checkbox').checked = data.admin === 1 ? true : false
+    }
+
+    async function updateUserHandler() {
+      const usernameInput = document.getElementById('usernameInput').value
+
+      if (usernameInput !== '') {
+        alertify.warning('Actualizando usuario')
+        const newData = { }
+
+        newData.email = document.getElementById('email').value
+        newData.name = document.getElementById('name').value
+        newData.address = document.getElementById('address').value
+        newData.age = document.getElementById('age').value
+        newData.areacode = document.getElementById('areacode').value
+        newData.telephone = document.getElementById('telephone').value
+        newData.admin = document.getElementById('checkbox').checked == true ? 1 : 0
+
+        const data = await fetch(`/users/${usernameInput}`,
+        {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newData)
+        })
+        .then(response => response.json())
+
+        data.message === 'Query successfully resolved' && window.location.reload()
+        alertify.success('Usuario actualizado de forma exitosa')
+      }
+    }
+
+    async function removeUserHandler() {
+      alertify.warning('Eliminando usuario')
+      const usernameInput = document.getElementById('usernameInput').value
+
+      if (usernameInput !== '') {
+        const data = await fetch(`/users/${usernameInput}`,
+        {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+
+        data.message === 'Query successfully resolved' && window.location.reload()
+        alertify.success('Usuario eliminado de forma exitosa')
+      }
+    }
+</script>
+</html>
