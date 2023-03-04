@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carrito</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"
+    />
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
+    <script src="./scripts/cart.js" defer></script>
+  </head>
+
+  <body>
+    <section class="main__container">
+      <%- include('./partials/header', { user: user.data, active: 'cart' }) %>
+      <% if (dataDTO.data.products.length === 0) { %>
+      <div class="cart__container--emptycart">
+        <img src="https://i.ibb.co/b3xcKnM/empty-cart-retina.png" alt="" />
+        <p>No hay productos en el carrito</p>
+        <button class="custom__button--dark" onclick="location.href='/'">
+          IR A LOS PRODUCTOS
+        </button>
+      </div>
+      <% } else { %>
+      <article class="cart__container">
+        <div class="cart__container--leftside">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Imagen</th>
+                <th>Eliminar</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <% dataDTO.data.products.forEach(item => { %>
+              <tr>
+                <td><%= item.itemName %></td>
+                <td>$ <%= item.itemPrice %></td>
+                <td class="item__photo"><img src="<%= item.itemPhoto %>" /></td>
+                <td>
+                  <button
+                    class="btn__navigation--remove"
+                    onclick="deleteItemHandler('<%= item.itemID %>', '<%= user.data.cartID %>')"
+                  >
+                    -
+                  </button>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <div class="cart__container--rightside">
+          <table>
+            <thead>
+              <tr>
+                <th colspan="2" style="text-align: start">Resumen</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>Productos:</td>
+                <td>$ <%= dataDTO.data.total %></td>
+              </tr>
+              <tr>
+                <td>Envío:</td>
+                <td>$ 0</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="cart__container--buttons">
+            <button
+              class="custom__button"
+              onclick="cleanCartHandler('<%= user.data.cartID %>')"
+            >
+              Vaciar carrito
+            </button>
+            <button class="custom__button--green" onclick="checkoutHandler()">
+              Confirmar compra
+            </button>
+          </div>
+        </div>
+      </article>
+      <% } %> <%- include('./partials/footer') %>
+    </section>
+  </body>
+</html>
